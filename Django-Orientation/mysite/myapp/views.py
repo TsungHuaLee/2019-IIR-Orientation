@@ -29,24 +29,34 @@ def GETSearchSong(request):
 def POSTDeleteSong(request):
     song_list = []
     if request.method == 'POST':
-        id = request.POST.get('delete')
-        KkboxSong.objects.filter(id=id).delete()
-    return render(request, 'myapp/searchPage.html', locals())
+        id = request.POST.get('id')
+        print(id)
+        if(id == None):
+            return JsonResponse({"state": "don't get ID"})
+        else:
+            KkboxSong.objects.filter(id=id).delete()
+        return JsonResponse({"state": "success"})
+    else:
+        return JsonResponse({"state": "don't get ID"})
+
 
 def POSTInsertSong(request):
     song_list = []
     if request.method == 'POST':
         song_name = request.POST.get('song_name')
         artist = request.POST.get('artist')
-        url = request.POST.get('url')
+        url_ = request.POST.get('url_')
         image = request.POST.get('image')
 
-        u = KkboxSong.objects.create(song_name=song_name, artist = artist, url = url, image = image,
+        # print(song_name, artist, url_)
+        u = KkboxSong.objects.create(song_name=song_name, artist = artist, url = url_, image = image,
                                         is_deleted = 0, kkbox_api_id = hash(song_name),
                                         length = 0, created_at = datetime.now(), updated_at = datetime.now())
         u.save()
 
-    return render(request, 'myapp/searchPage.html', locals())
+        return JsonResponse({"state": "success"})
+    else:
+        return JsonResponse({"state": "fail to insert song"})
 
 def POSTModifySong(request):
     song_list = []
@@ -55,10 +65,12 @@ def POSTModifySong(request):
         song_name = request.POST.get('song_name')
         artist = request.POST.get('artist')
 
-        # print(id, artist, song_name)
-        KkboxSong.objects.filter(id=id).update(song_name=song_name, artist = artist, updated_at = datetime.now())
-    return render(request, 'myapp/searchPage.html', locals())
-
+        print(id, artist, song_name)
+        time = datetime.now()
+        KkboxSong.objects.filter(id=id).update(song_name=song_name, artist = artist, updated_at = time)
+        return JsonResponse({"state": "success"})
+    else:
+        return JsonResponse({"state": "fail to insert song"})
 
 def AndroidLike(request):
     unique_id = set()
@@ -75,7 +87,6 @@ def AndroidLike(request):
     return JsonResponse({"song_name":songs, "artist":artists})
 
     # return JsonResponse({"song_name":songs[0], "artist":artists[0]})
-    #return JsonResponse(rejson, safe = False)
 
 def AndroidUnLike(request):
     unique_id = set()
