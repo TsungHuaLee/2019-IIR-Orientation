@@ -16,6 +16,70 @@
 
     {% load staticfiles %}
     <link rel="stylesheet" type="text/css" href="{% static '/myapp/css/searchPage.css' %}" />
+
+    <script>
+        function deleteSong(element){
+            var sendData = element.value;
+            $.ajax({
+                       type: "POST",
+                       url: "/deleteSong",
+                       dataType: "json",
+                       data: {
+                           id : sendData,
+                           csrfmiddlewaretoken: '{{ csrf_token }}'
+                       },
+                       success: function (data) {
+                       },
+                       error: function () {
+                           alert(data["state"]);
+                       }
+                   });
+            element.closest('tr').remove()
+        }
+        function modifySong(element){
+            $.ajax({
+                       type: "POST",
+                       url: "/modifySong",
+                       dataType: "json",
+                       data: {
+                           id : $("#modify_id").val(),
+                           song_name : $("#modify_song").val(),
+                           artist : $("#modify_artist").val(),
+                           csrfmiddlewaretoken: '{{ csrf_token }}'
+                       },
+                       success: function (data) {
+                       },
+                       error: function () {
+                           alert(data["state"]);
+                       }
+                   });
+             var x = element.closest('tr')
+             x[0].innerHTML = "NEW CONTENT";
+        }
+        $(document).ready(function() {
+            $('#insertBtn').on('click', function() {
+                $.ajax({
+                            type: "POST",
+                            url: "/insertSong",
+                            dataType: "json",
+                            data: {
+                                song_name : $("#insert_song").val(),
+                                artist : $("#insert_artist").val(),
+                                // url conflict with url:"/insertSong"
+                                url_ : $("#insert_url").val(),
+                                image : $("#insert_image").val(),
+                                csrfmiddlewaretoken: '{{ csrf_token }}'
+                            },
+                            success: function (data) {
+                            },
+                            error: function (data) {
+                                alert(data["state"]);
+                            }
+                        });
+            });
+        })
+
+    </script>
 </head>
 
 <body>
@@ -47,21 +111,19 @@
             </thead>
             <tbody>
                 {% for song in song_list %}
-                <tr>
+                <tr id = {{ song.id }}>
                     <th><img width="100" height="100" src={{ song.image }}></th>
                     <th>{{ song.artist }}</th>
                     <th><a href={{ song.url }}> {{ song.song_name }}</a></th>
                     <th>
-                        <form action='/deleteSong' method='POST'>
-                            {% csrf_token %}
-                            <button type='submit' class='btn btn-danger' name='delete' value={{ song.id }}>Delete</button>
+                        <form>
+                            <button id="deleteBtn" type="button" class="btn btn-danger" value = {{ song.id }} onclick="deleteSong(this)">Delete</button>
+
+                            <button id="modifyModalBtn" type="button" class="btn btn-warning" data-toggle="modal" data-target="#modifyModal"
+                                    data-id={{ song.id }} data-song_name={{ song.song_name }} data-artist={{ song.artist }}>
+                                Modify
+                            </button>
                         </form>
-
-                        <button type="button" class="btn btn-warning feed-data" data-toggle="modal" data-target="#modifyModal" style="margin:10px 0px 0px 0px"
-                                data-id={{ song.id }} data-song_name={{ song.song_name }} data-artist={{ song.artist }}>
-                            Modify
-                        </button>
-
                     </th>
                 </tr>
                 {% endfor %}
@@ -81,35 +143,33 @@
                 </div>
 
                 <!-- Modal body -->
-                <form action='insertSong' method='POST'>
                     <div class="modal-body">
                         <div class='form-group'>
                             {% csrf_token %}
                             <div class="form-group">
-                                <label for="song_name">song name:</label>
-                                <input type="text" class="form-control" name='song_name' value="" id="song_name">
+                                <label for="insert_song_name">song name:</label>
+                                <input type="text" class="form-control" name='song_name' value="" id="insert_song">
                             </div>
                             <div class="form-group">
-                                <label for="artist">artist:</label>
-                                <input type="text" class="form-control" name='artist' value="" id="artist">
+                                <label for="insert_artist">artist:</label>
+                                <input type="text" class="form-control" name='artist' value="" id="insert_artist">
                             </div>
                             <div class="form-group">
-                                <label for="url">url:</label>
-                                <input type="text" class="form-control" name='url' value="" id="url">
+                                <label for="insert_url">url:</label>
+                                <input type="text" class="form-control" name='url' value="" id="insert_url">
                             </div>
                             <div class="form-group">
-                                <label for="image">image:</label>
-                                <input type="text" class="form-control" name='image' value="" id="image">
+                                <label for="insert_image">image:</label>
+                                <input type="text" class="form-control" name='image' value="" id="insert_image">
                             </div>
                         </div>
                     </div>
                     <!-- Modal footer -->
                     <div class="modal-footer">
                         {% csrf_token %}
-                        <button type='submit' class="btn btn-primary" , align="center">Submit</button>
+                        <button id='insertBtn' type='submit' class="btn btn-primary" align="center" data-dismiss="modal">Submit</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                     </div>
-                </form>
             </div>
         </div>
     </div>
@@ -125,38 +185,38 @@
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
 
-                <form action="modifySong" method="POST">
+                <form>
                     <div class="modal-body">
-                        <input id="song id" name="id" type="hidden" value="" />
+                        <input id="modify_id" name="id" type="hidden" value="" />
                         <div class="form-group">
-                            <label for="song_name">song name:</label>
-                            <input type="text" class="form-control" name="song_name" value="" id="song name"/>
+                            <label for="modify_song">song name:</label>
+                            <input type="text" class="form-control" name="song_name" value="" id="modify_song"/>
                         </div>
                         <div class="form-group">
-                            <label for="artists">artist:</label>
-                            <input type="text" class="form-control" name="artist" value="" id="artists"/>
+                            <label for="modify_artists">artist:</label>
+                            <input type="text" class="form-control" name="artist" value="" id="modify_artist"/>
                         </div>
                     </div>
-
-                    <script>
-                    $(document).ready(function() {
-                        $('body').on('click', '.feed-data', function() {
-                            document.getElementById("song id").value = $(this).attr('data-id');
-                            console.log($(this).attr('data-id'));
-                            document.getElementById("song name").value = $(this).attr('data-song_name');
-                            console.log($(this).attr('data-song_name'));
-                            document.getElementById("artists").value = $(this).attr('data-artist');
-                            console.log($(this).attr('data-artist'));
-                        });
-                    });
-                    </script>
 
                     <div class="modal-footer">
                         {% csrf_token %}
-                        <button type='submit' class="btn btn-primary" , align="center">Submit</button>
+                        <button id="modifyBtn" type='button' class="btn btn-primary" align="center" onclick="modifySong(this)" data-dismiss="modal">Submit</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     </div>
                 </form>
+
+                <script>
+                    $(document).ready(function() {
+                        $('#modifyModalBtn').on('click', function() {
+                            document.getElementById("modify_id").value = $(this).attr('data-id');
+                            console.log($(this).attr('data-id'));
+                            document.getElementById("modify_song").value = $(this).attr('data-song_name');
+                            console.log($(this).attr('data-song_name'));
+                            document.getElementById("modify_artist").value = $(this).attr('data-artist');
+                            console.log($(this).attr('data-artist'));
+                        });
+                    });
+                </script>
             </div>
         </div>
     </div>
@@ -170,3 +230,23 @@
 </body>
 
 </html>
+
+<!-- // $('#modifyBtn').on('click', function() {
+//     $.ajax({
+//                 type: "POST",
+//                 url: "/modifySong",
+//                 dataType: "json",
+//                 data: {
+//                     id : $("#song_id").val(),
+//                     song_name : $("#modify_song").val(),
+//                     artist : $("#modify_artist").val(),
+//                     csrfmiddlewaretoken: '{{ csrf_token }}'
+//                 },
+//                 success: function (data) {
+//                     alert(data["state"]);
+//                 },
+//                 error: function () {
+//                     alert(data["state"]);
+//                 }
+//             });
+// }); -->
