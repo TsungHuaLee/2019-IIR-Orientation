@@ -57,8 +57,16 @@ public class ButtonFragment extends Fragment {
 
         unlike_btn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                req = RetrofitRequest.getInstance();
-                req.Request_LikeInfo("unlike");
+//                req = RetrofitRequest.getInstance();
+//                req.Request_LikeInfo("unlike");
+
+                Log.d("click unlike button", "Click unlike button");
+                Bundle bundle = new Bundle();
+                bundle.putString("preference", "unlike");
+
+                FragmentManager fragmentManager = getFragmentManager();
+                fragmentManager.beginTransaction().replace(R.id.main_container, ContentFragment.newInstance(bundle)).commit();
+
             }
         });
 
